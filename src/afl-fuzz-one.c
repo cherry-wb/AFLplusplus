@@ -531,6 +531,13 @@ u8 fuzz_one_original(char** argv) {
 
   }
 
+  if (cmplog_mode) {
+
+    if (input_to_state_stage(argv, in_buf, out_buf, len, queue_cur->exec_cksum))
+      goto abandon_entry;
+
+  }
+
   /* Skip right away if -d is given, if it has not been chosen sufficiently
      often to warrant the expensive deterministic stage (fuzz_level), or
      if it has gone through deterministic testing in earlier, resumed runs
@@ -1467,7 +1474,7 @@ skip_interest:
   stage_name = "user extras (insert)";
   stage_short = "ext_UI";
   stage_cur = 0;
-  stage_max = extras_cnt * len;
+  stage_max = extras_cnt * (len + 1);
 
   orig_hit_cnt = new_hit_cnt;
 
@@ -3485,7 +3492,7 @@ skip_interest:
   stage_name = "user extras (insert)";
   stage_short = "ext_UI";
   stage_cur = 0;
-  stage_max = extras_cnt * len;
+  stage_max = extras_cnt * (len + 1);
 
   orig_hit_cnt = new_hit_cnt;
 

@@ -26,7 +26,8 @@
 
 /* Version string: */
 
-#define VERSION "++2.60d"  // c = release, d = volatile github dev
+// c = release, d = volatile github dev, e = experimental branch
+#define VERSION "++2.60d"
 
 /******************************************************
  *                                                    *
@@ -44,6 +45,12 @@
 #ifndef ANDROID_DISABLE_FANCY  // Fancy boxes are ugly from adb
 #define FANCY_BOXES
 #endif
+
+/* Comment out to have safe memory checks (security in ck_ functions).
+   This will cost a little speed, so disable when developing on how
+   the queue works */
+
+#define UNSAFE_MEMORY
 
 /* Default timeout for fuzzed code (milliseconds). This is the upper bound,
    also used for detecting hangs; the actual value is auto-scaled: */
@@ -364,6 +371,10 @@
 /* Enable NeverZero counters in QEMU mode */
 
 #define AFL_QEMU_NOT_ZERO
+
+/* AFL RedQueen */
+
+#define CMPLOG_SHM_ENV_VAR "__AFL_CMPLOG_SHM_ID"
 
 /* Uncomment this to use inferior block-coverage-based instrumentation. Note
    that you need to recompile the target binary for this to have any effect: */

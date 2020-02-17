@@ -25,6 +25,7 @@
 #endif
 #include "config.h"
 #include "types.h"
+#include "cmplog.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include <sys/mman.h>
 #include <sys/shm.h>
@@ -135,7 +137,7 @@ static void __afl_start_forkserver(void) {
 
   u8 child_stopped = 0;
 
-  void (*old_sigchld_handler)(int) = signal(SIGCHLD, SIG_DFL);
+  void (*old_sigchld_handler)(int) = 0;  // = signal(SIGCHLD, SIG_DFL);
 
   /* Phone home and tell the parent that we're OK. If parent isn't there,
      assume we're not running in forkserver mode and just execute program. */

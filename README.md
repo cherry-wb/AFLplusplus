@@ -1,5 +1,7 @@
 # american fuzzy lop plus plus (afl++)
 
+  <img align="right" src="https://raw.githubusercontent.com/andreafioraldi/AFLplusplus-website/master/static/logo_256x256.png" alt="AFL++ Logo">
+
   ![Travis State](https://api.travis-ci.com/vanhauser-thc/AFLplusplus.svg?branch=master)
 
   Release Version: 2.60c 
@@ -8,14 +10,12 @@
 
   includes all necessary/interesting changes from Google's afl 2.56b
 
-
   Originally developed by Michal "lcamtuf" Zalewski.
 
   Repository: [https://github.com/vanhauser-thc/AFLplusplus](https://github.com/vanhauser-thc/AFLplusplus)
 
   afl++ is maintained by Marc "van Hauser" Heuse <mh@mh-sec.de>,
-  Heiko "hexcoder-" Eißfeldt <heiko.eissfeldt@hexco.de> and
-  Andrea Fioraldi <andreafioraldi@gmail.com>.
+  Heiko "hexcoder-" Eißfeldt <heiko.eissfeldt@hexco.de>, Andrea Fioraldi <andreafioraldi@gmail.com> and Dominik Maier <mail@dmnk.co>.
 
   Note that although afl now has a Google afl repository [https://github.com/Google/afl](https://github.com/Google/afl),
   it is unlikely to receive any noteable enhancements: [https://twitter.com/Dor3s/status/1154737061787660288](https://twitter.com/Dor3s/status/1154737061787660288)
@@ -27,7 +27,7 @@
   get any feature improvements since November 2017.
 
   Among other changes afl++ has a more performant llvm_mode, supports
-  llvm up to version 10, QEMU 3.1, more speed and crashfixes for QEMU,
+  llvm up to version 11, QEMU 3.1, more speed and crashfixes for QEMU,
   better *BSD and Android support and much, much more.
 
   Additionally the following features and patches have been integrated:
@@ -56,22 +56,26 @@
 
   * qbdi_mode: fuzz android native libraries via QBDI framework
 
+  * The new CmpLog instrumentation for LLVM and QEMU inspired by [Redqueen](https://www.syssec.ruhr-uni-bochum.de/media/emma/veroeffentlichungen/2018/12/17/NDSS19-Redqueen.pdf)
 
   A more thorough list is available in the PATCHES file.
 
-  | Feature/Instrumentation | afl-gcc | llvm_mode | gcc_plugin | qemu_mode | unicorn_mode |
-  | ----------------------- |:-------:|:---------:|:----------:|:---------:|:------------:|
-  | laf-intel / CompCov     |         |     x     |            |  x86/arm  |   x86/arm    |
-  | NeverZero               |    x    |     x(1)  |      (2)   |     x     |      x       |
-  | Persistent mode         |         |     x     |     x      |    x86    |      x       |
-  | Whitelist               |         |     x     |     x      |           |              |
-  | InsTrim                 |         |     x     |            |           |              |
+  | Feature/Instrumentation | afl-gcc | llvm_mode | gcc_plugin | qemu_mode        | unicorn_mode |
+  | ----------------------- |:-------:|:---------:|:----------:|:----------------:|:------------:|
+  | NeverZero               |    x    |     x(1)  |      (2)   |         x        |       x      |
+  | Persistent mode         |         |     x     |     x      | x86[_64]/arm[64] |       x      |
+  | laf-intel / CompCov     |         |     x     |            | x86[_64]/arm[64] | x86[_64]/arm |
+  | CmpLog                  |         |     x     |            | x86[_64]/arm[64] |              |
+  | Whitelist               |         |     x     |     x      |        (x)(3)    |              |
+  | InsTrim                 |         |     x     |            |                  |              |
 
   neverZero:
 
   (1) only in LLVM >= 9.0 due to a bug in llvm in previous versions
 
   (2) gcc creates non-performant code, hence it is disabled in gcc_plugin
+
+  (3) partially via AFL_CODE_START/AFL_CODE_END
 
   So all in all this is the best-of afl that is currently out there :-)
 
@@ -81,7 +85,7 @@
   To compare notes with other users or get notified about major new features,
   send a mail to <afl-users+subscribe@googlegroups.com>.
 
-  See [docs/QuickStartGuide.txt](docs/QuickStartGuide.txt) if you don't have time to
+  See [docs/QuickStartGuide.md](docs/QuickStartGuide.md) if you don't have time to
   read this file.
 
 
@@ -204,7 +208,7 @@ superior to blind fuzzing or coverage-only tools.
 PLEASE NOTE: llvm_mode compilation with afl-clang-fast/afl-clang-fast++
 instead of afl-gcc/afl-g++ is much faster and has a few cool features.
 See llvm_mode/ - however few code does not compile with llvm.
-We support llvm versions 3.8.0 to 10.
+We support llvm versions 3.8.0 to 11.
 
 When source code is available, instrumentation can be injected by a companion
 tool that works as a drop-in replacement for gcc or clang in any standard build
@@ -227,7 +231,7 @@ For C++ programs, you'd would also want to set `CXX=/path/to/afl/afl-g++`.
 The clang wrappers (afl-clang and afl-clang++) can be used in the same way;
 clang users may also opt to leverage a higher-performance instrumentation mode,
 as described in [llvm_mode/README.md](llvm_mode/README.md).
-Clang/LLVM has a much better performance and works with LLVM version 3.8.0 to 10.
+Clang/LLVM has a much better performance and works with LLVM version 3.8.0 to 11.
 
 Using the LAF Intel performance enhancements are also recommended, see 
 [llvm_mode/README.laf-intel.md](llvm_mode/README.laf-intel.md)
@@ -251,7 +255,7 @@ automatically enable code hardening options that make it easier to detect
 simple memory bugs. Libdislocator, a helper library included with AFL (see
 [libdislocator/README.md](libdislocator/README.md)) can help uncover heap corruption issues, too.
 
-PS. ASAN users are advised to review [docs/notes_for_asan.txt](docs/notes_for_asan.txt)
+PS. ASAN users are advised to review [docs/notes_for_asan.md](docs/notes_for_asan.md)
 file for important caveats.
 
 
@@ -272,14 +276,14 @@ $ ./build_qemu_support.sh
 For additional instructions and caveats, see [qemu_mode/README.md](qemu_mode/README.md).
 
 The mode is approximately 2-5x slower than compile-time instrumentation, is
-less conductive to parallelization, and may have some other quirks.
+less conducive to parallelization, and may have some other quirks.
 
 If [afl-dyninst](https://github.com/vanhauser-thc/afl-dyninst) works for
 your binary, then you can use afl-fuzz normally and it will have twice
 the speed compared to qemu_mode.
 
 A more comprehensive description of these and other options can be found in
-[docs/binaryonly_fuzzing.txt](docs/binaryonly_fuzzing.txt)
+[docs/binaryonly_fuzzing.md](docs/binaryonly_fuzzing.md)
 
 
 ## 5) Power schedules
@@ -316,7 +320,7 @@ contains a good example of the input data normally expected by the targeted
 application. There are two basic rules:
 
   - Keep the files small. Under 1 kB is ideal, although not strictly necessary.
-    For a discussion of why size matters, see [perf_tips.txt](docs/perf_tips.txt).
+    For a discussion of why size matters, see [perf_tips.md](docs/perf_tips.md).
 
   - Use multiple test cases only if they are functionally different from
     each other. There is no point in using fifty different vacation photos
@@ -360,7 +364,7 @@ You can use -t and -m to override the default timeout and memory limit for the
 executed process; rare examples of targets that may need these settings touched
 include compilers and video decoders.
 
-Tips for optimizing fuzzing performance are discussed in [perf_tips.txt](docs/perf_tips.txt).
+Tips for optimizing fuzzing performance are discussed in [perf_tips.md](docs/perf_tips.md).
 
 Note that afl-fuzz starts by performing an array of deterministic fuzzing
 steps, which can take several days, but tend to produce neat test cases. If you
@@ -370,7 +374,7 @@ fuzzers - add the -d option to the command line.
 
 ## 8) Interpreting output
 
-See the [docs/status_screen.txt](docs/status_screen.txt) file for information on
+See the [docs/status_screen.md](docs/status_screen.md) file for information on
 how to interpret the displayed stats and monitor the health of the process. Be
 sure to consult this file especially if any UI elements are highlighted in red.
 
@@ -434,11 +438,11 @@ see [http://lcamtuf.coredump.cx/afl/plot/](http://lcamtuf.coredump.cx/afl/plot/)
 Every instance of afl-fuzz takes up roughly one core. This means that on
 multi-core systems, parallelization is necessary to fully utilize the hardware.
 For tips on how to fuzz a common target on multiple cores or multiple networked
-machines, please refer to [docs/parallel_fuzzing.txt](docs/parallel_fuzzing.txt).
+machines, please refer to [docs/parallel_fuzzing.md](docs/parallel_fuzzing.md).
 
 The parallel fuzzing mode also offers a simple way for interfacing AFL to other
 fuzzers, to symbolic or concolic execution engines, and so forth; again, see the
-last section of [docs/parallel_fuzzing.txt](docs/parallel_fuzzing.txt) for tips.
+last section of [docs/parallel_fuzzing.md](docs/parallel_fuzzing.md) for tips.
 
 
 ## 10) Fuzzer dictionaries
@@ -522,7 +526,7 @@ file, attempts to sequentially flip bytes, and observes the behavior of the
 tested program. It then color-codes the input based on which sections appear to
 be critical, and which are not; while not bulletproof, it can often offer quick
 insights into complex file formats. More info about its operation can be found
-near the end of [docs/technical_details.txt](docs/technical_details.txt).
+near the end of [docs/technical_details.md](docs/technical_details.md).
 
 
 ## 12) Going beyond crashes
@@ -594,12 +598,12 @@ Here are some of the most important caveats for AFL:
     wholly wrap the actual data format to be tested.
 
     To work around this, you can comment out the relevant checks (see
-    experimental/libpng_no_checksum/ for inspiration); if this is not possible,
+    examples/libpng_no_checksum/ for inspiration); if this is not possible,
     you can also write a postprocessor, as explained in
-    experimental/post_library/ (with AFL_POST_LIBRARY)
+    examples/post_library/ (with AFL_POST_LIBRARY)
 
   - There are some unfortunate trade-offs with ASAN and 64-bit binaries. This
-    isn't due to any specific fault of afl-fuzz; see [docs/notes_for_asan.txt](docs/notes_for_asan.txt)
+    isn't due to any specific fault of afl-fuzz; see [docs/notes_for_asan.md](docs/notes_for_asan.md)
     for tips.
 
   - There is no direct support for fuzzing network services, background
@@ -668,6 +672,7 @@ without feedback, bug reports, or patches from:
   Nathan Voss                           Dominik Maier
   Andrea Biondo                         Vincent Le Garrec
   Khaled Yakdan                         Kuang-che Wu
+  Josephine Calliotte
 ```
 
 Thank you!

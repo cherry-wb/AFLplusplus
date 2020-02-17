@@ -96,10 +96,11 @@ static void usage(u8* argv0) {
       "score.\n"
       "                  <explore (default), fast, coe, lin, quad, or "
       "exploit>\n"
-      "                  see docs/power_schedules.txt\n"
+      "                  see docs/power_schedules.md\n"
       "  -f file       - location read by the fuzzed program (stdin)\n"
       "  -t msec       - timeout for each run (auto-scaled, 50-%d ms)\n"
       "  -m megs       - memory limit for child process (%d MB)\n"
+      "  -c program    - enable CmpLog by specifying a binary compiled for it\n"
       "  -Q            - use binary-only instrumentation (QEMU mode)\n"
       "  -U            - use unicorn-based instrumentation (Unicorn mode)\n"
       "  -W            - use qemu-based instrumentation with Wine (Wine "
@@ -132,7 +133,7 @@ static void usage(u8* argv0) {
 
       "Other stuff:\n"
       "  -T text       - text banner to show on the screen\n"
-      "  -M / -S id    - distributed mode (see parallel_fuzzing.txt)\n"
+      "  -M / -S id    - distributed mode (see parallel_fuzzing.md)\n"
       "  -I command    - execute this command/script when a new crash is "
       "found\n"
       "  -B bitmap.txt - mutate a specific test case, use the out/fuzz_bitmap "
@@ -144,7 +145,7 @@ static void usage(u8* argv0) {
       argv0, EXEC_TIMEOUT, MEM_LIMIT);
 
 #ifdef USE_PYTHON
-  SAYF("Compiled with Python %s module support, see docs/python_mutators.txt\n",
+  SAYF("Compiled with %s module support, see docs/python_mutators.md\n",
        (char*)PYTHON_VERSION);
 #endif
 
@@ -171,7 +172,7 @@ static int stricmp(char const* a, char const* b) {
 
 /* Main entry point */
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv, char** envp) {
 
   s32    opt;
   u64    prev_queued = 0;
@@ -193,11 +194,19 @@ int main(int argc, char** argv) {
   init_seed = tv.tv_sec ^ tv.tv_usec ^ getpid();
 
   while ((opt = getopt(argc, argv,
-                       "+i:I:o:f:m:t:T:dnCB:S:M:x:QNUWe:p:s:V:E:L:hR")) > 0)
+                       "+c:i:I:o:f:m:t:T:dnCB:S:M:x:QNUWe:p:s:V:E:L:hRP:")) > 0)
 
     switch (opt) {
 
       case 'I': infoexec = optarg; break;
+
+      case 'c': {
+
+        cmplog_mode = 1;
+        cmplog_binary = ck_strdup(optarg);
+        break;
+
+      }
 
       case 's': {
 
@@ -600,6 +609,14 @@ int main(int argc, char** argv) {
   OKF("afl-tmin fork server patch from github.com/nccgroup/TriforceAFL");
   OKF("MOpt Mutator from github.com/puppet-meteor/MOpt-AFL");
 
+  if (sync_id && force_deterministic &&
+      (getenv("AFL_CUSTOM_MUTATOR_ONLY") || getenv("AFL_PYTHON_ONLY")))
+    WARNF(
+        "Using -M master with the AFL_..._ONLY mutator options will result in "
+        "no deterministic mutations being done!");
+
+  check_environment_vars(envp);
+
   if (fixed_seed) OKF("Running with fixed seed: %u", (u32)init_seed);
   srandom((u32)init_seed);
 
@@ -858,6 +875,7 @@ int main(int argc, char** argv) {
 
   if (!out_file) setup_stdio_file();
 
+  if (cmplog_binary) check_binary(cmplog_binary);
   check_binary(argv[optind]);
 
   start_time = get_cur_time();
@@ -1007,6 +1025,8 @@ int main(int argc, char** argv) {
 
     if (child_pid > 0) kill(child_pid, SIGKILL);
     if (forksrv_pid > 0) kill(forksrv_pid, SIGKILL);
+    if (cmplog_child_pid > 0) kill(cmplog_child_pid, SIGKILL);
+    if (cmplog_forksrv_pid > 0) kill(cmplog_forksrv_pid, SIGKILL);
     /* Now that we've killed the forkserver, we wait for it to be able to get
      * rusage stats. */
     if (waitpid(forksrv_pid, NULL, 0) <= 0) { WARNF("error waitpid\n"); }
